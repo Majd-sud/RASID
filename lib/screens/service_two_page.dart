@@ -50,6 +50,12 @@ class _ServiceSendViolationsPageState extends State<ServiceSendViolationsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final h = MediaQuery.of(context).size.height;
+    final w = MediaQuery.of(context).size.width;
+    const double titleFontSize = 14.0;
+    const double numberFontSize = 20.0;
+    const Color titleColor = Color.fromARGB(255, 14, 39, 2);
+    const Color numberColor = Color(0xFF1B8354);
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       body: SingleChildScrollView(
@@ -57,13 +63,151 @@ class _ServiceSendViolationsPageState extends State<ServiceSendViolationsPage> {
           children: [
             const NavBarTop(),
             _buildHeader(),
-            _buildDivider(),
-            _buildServiceCards(),
-            const SizedBox(height: 200),
-            const NavBarBottom(),
+            // _buildDivider(),
+            // _buildServiceCards(),
+            // const SizedBox(height: 200),
+            ...violationsList.map((violation) {
+              return Container(
+                height: h * .6,
+                width: w * .9,
+                padding: const EdgeInsets.all(15.0),
+                margin: const EdgeInsets.symmetric(vertical: 10.0),
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(
+                      color: Colors.grey[300]!,
+                    )),
+                child: Column(
+                  children: [
+                    Align(
+                      alignment: Alignment.topRight,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Container(
+                            height: h * .15,
+                            width: w * .3,
+                            // color: Colors.red,
+                            child: Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  _buildTextStyle(
+                                    text:
+                                        '${violation['violationNumber']}  تفاصيل رفع المخالفة رقم :',
+                                    fontSize: titleFontSize,
+                                    fontWeight: FontWeight.bold,
+                                    color: titleColor,
+                                  ),
+                                  const SizedBox(height: 5.0),
+                                  // _buildTextStyle(
+                                  //   text:
+                                  //       .toString(),
+                                  //   fontSize: numberFontSize,
+                                  //   fontWeight: FontWeight.bold,
+                                  //   color: numberColor,
+                                  // ),
+                                  const SizedBox(height: 5.0),
+                                  // _buildTextStyle(
+                                  //   text:
+                                  //       ',
+                                  //   fontSize: titleFontSize,
+                                  //   fontWeight: FontWeight.bold,
+                                  //   color: titleColor,
+                                  // ),
+                                  Text(
+                                    'لرفع المخالفة يجب عليك تعبئة حقول \nالبيانات المطلوبة',
+                                    textAlign: TextAlign.right,
+                                  )
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      height: h * .3,
+                      width: w * .9,
+                      // color: Colors.red[100],
+                      child: Row(
+                        children: [
+                          Expanded(
+                              child: Container(
+                            // color: Colors.green[100],
+                            child: Column(
+                              children: [
+                                if (violation['imageUrl'] != null)
+                                  Container(
+                                    width: 150,
+                                    height: 150,
+                                    margin: const EdgeInsets.only(right: 20.0),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12.0),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.grey.withOpacity(0.2),
+                                          spreadRadius: 2,
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(12.0),
+                                      child: Image.network(
+                                        violation['imageUrl'],
+                                        fit: BoxFit.cover,
+                                        loadingBuilder: (BuildContext context,
+                                            Widget child,
+                                            ImageChunkEvent? loadingProgress) {
+                                          if (loadingProgress == null)
+                                            return child;
+                                          return Center(
+                                            child: CircularProgressIndicator(
+                                              value: loadingProgress
+                                                          .expectedTotalBytes !=
+                                                      null
+                                                  ? loadingProgress
+                                                          .cumulativeBytesLoaded /
+                                                      (loadingProgress
+                                                              .expectedTotalBytes ??
+                                                          1)
+                                                  : null,
+                                            ),
+                                          );
+                                        },
+                                        errorBuilder: (BuildContext context,
+                                            Object error,
+                                            StackTrace? stackTrace) {
+                                          return const Center(
+                                              child:
+                                                  Text('خطأ في تحميل الصورة'));
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          )),
+                          Expanded(
+                              flex: 3,
+                              child: Container(
+                                // color: Colors.blue[100],
+                                child: _buildViolationForm(
+                                    violationsList.first['violationNumber']),
+                              ))
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            })
           ],
         ),
       ),
+      bottomNavigationBar: const NavBarBottom(),
     );
   }
 
@@ -281,7 +425,7 @@ class _ServiceSendViolationsPageState extends State<ServiceSendViolationsPage> {
       key: _formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
-        textDirection: TextDirection.rtl,
+        textDirection: TextDirection.ltr,
         children: [
           _buildTextField(
             label: 'تفاصيل المخالفة',
@@ -297,44 +441,54 @@ class _ServiceSendViolationsPageState extends State<ServiceSendViolationsPage> {
             },
           ),
           const SizedBox(height: 10.0),
-          _buildTextField(
-            label: 'رقم الهاتف',
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'يرجى إدخال رقم الهاتف';
-              }
-              return null;
-            },
-            onChanged: (value) {
-              phoneNumber = value;
-            },
-          ),
-          const SizedBox(height: 10.0),
-          _buildTextField(
-            label: 'رقم السيارة',
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'يرجى إدخال رقم السيارة';
-              }
-              return null;
-            },
-            onChanged: (value) {
-              carNumber = value;
-            },
-          ),
-          const SizedBox(height: 10.0),
-          _buildTextField(
-            label: 'تاريخ المخالفة',
-            hintText: 'YYYY-MM-DD',
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'يرجى إدخال تاريخ المخالفة';
-              }
-              return null;
-            },
-            onChanged: (value) {
-              violationDate = value;
-            },
+          Row(
+            children: [
+              Expanded(
+                child: _buildTextField(
+                  label: 'رقم الهاتف',
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'يرجى إدخال رقم الهاتف';
+                    }
+                    return null;
+                  },
+                  onChanged: (value) {
+                    phoneNumber = value;
+                  },
+                ),
+              ),
+              const SizedBox(width: 10.0),
+              Expanded(
+                child: _buildTextField(
+                  label: 'رقم السيارة',
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'يرجى إدخال رقم السيارة';
+                    }
+                    return null;
+                  },
+                  onChanged: (value) {
+                    carNumber = value;
+                  },
+                ),
+              ),
+              const SizedBox(width: 10.0),
+              Expanded(
+                child: _buildTextField(
+                  label: 'تاريخ المخالفة',
+                  hintText: 'YYYY-MM-DD',
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'يرجى إدخال تاريخ المخالفة';
+                    }
+                    return null;
+                  },
+                  onChanged: (value) {
+                    violationDate = value;
+                  },
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 10.0),
           _buildTextField(
@@ -349,7 +503,7 @@ class _ServiceSendViolationsPageState extends State<ServiceSendViolationsPage> {
               violationMessage = value;
             },
           ),
-          const SizedBox(height: 20.0),
+          const SizedBox(height: 10.0),
           MouseRegion(
             onEnter: (_) {
               setState(() {
@@ -403,6 +557,8 @@ class _ServiceSendViolationsPageState extends State<ServiceSendViolationsPage> {
     required ValueChanged<String> onChanged,
   }) {
     return TextFormField(
+      textAlign: TextAlign.right,
+      textDirection: TextDirection.rtl,
       decoration: InputDecoration(
         labelText: label,
         hintText: hintText,

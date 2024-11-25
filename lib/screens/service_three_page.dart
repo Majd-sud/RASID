@@ -26,17 +26,15 @@ class _ServiceToViewSentViolationsPageState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const NavBarTop(),
-            _buildHeader(),
-            _buildDivider(),
-            _buildServiceCards(),
-            const SizedBox(height: 200),
-            const NavBarBottom(),
-          ],
-        ),
+      body: Column(
+        children: [
+          Expanded(child: const NavBarTop()),
+          _buildHeader(),
+          _buildDivider(),
+          _buildServiceCards(),
+          // const SizedBox(height: 200),
+          Expanded(child: const NavBarBottom()),
+        ],
       ),
     );
   }

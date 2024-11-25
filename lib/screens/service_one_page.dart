@@ -96,18 +96,17 @@ class _ServiceToSeeViolationsPageState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            const NavBarTop(),
-            _buildHeader(),
-            _buildDivider(),
-            _buildImageGrid(),
-            const SizedBox(height: 200),
-            const NavBarBottom(),
-          ],
-        ),
+      body: ListView(
+        children: [
+          Expanded(child: const NavBarTop()),
+          _buildHeader(),
+          _buildDivider(),
+          _buildImageGrid(),
+          // const SizedBox(height: 200),
+          // Expanded(child: const),
+        ],
       ),
+      bottomNavigationBar: NavBarBottom(),
     );
   }
 
@@ -222,8 +221,8 @@ class ViolationImageCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(10.0),
             child: Image.network(
               imageUrl,
-              width: 90,
-              height: 90,
+              width: MediaQuery.of(context).size.width * .5,
+              height: MediaQuery.of(context).size.height * .75,
               fit: BoxFit.cover,
               loadingBuilder: (BuildContext context, Widget child,
                   ImageChunkEvent? loadingProgress) {

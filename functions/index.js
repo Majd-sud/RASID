@@ -1,46 +1,48 @@
-/**
- * Import function triggers from their respective submodules:
- *
- * const {onCall} = require("firebase-functions/v2/https");
- * const {onDocumentWritten} = require("firebase-functions/v2/firestore");
- *
- * See a full list of supported triggers at https://firebase.google.com/docs/functions
- */
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
+const nodemailer = require("nodemailer");
 
-// const { onRequest } = require("firebase-functions/v2/https");
-// const logger = require("firebase-functions/logger");
+admin.initializeApp();
 
-// // Create and deploy your first functions
-// // https://firebase.google.com/docs/functions/get-started
+// Configure your email transporter
+const transporter = nodemailer.createTransport({
+    service: "Gmail",
+    auth: {
+        user: "ajoud7101@gmail.com",
+        pass: "0555598476",
+    },
+});
 
-// exports.helloWorld = onRequest((request, response) => {
-//     logger.info("Hello logs!", { structuredData: true });
-//     response.send("Hello from Firebase!");
-// });
+// Trigger function when a file is uploaded to /violation_images
+exports.sendEmailOnImageUpload = functions.storage
+    .object()
+    .onFinalize(async (object) => {
+        // Check if the file is in the "violation_images" folder
+        const filePath = object.name; // Full path of the file
+        if (!filePath.startsWith("violation_images/")) {
+            console.log("File is not in violation_images folder, ignoring.");
+            return null;
+        }
 
+        const fileName = filePath.split("/").pop(); // Get the file name
+        const bucketName = object.bucket; // Storage bucket name
+        const fileUrl = "https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(filePath)}?alt=media";
 
-// import * as functions from "firebase-functions";
-// import * as admin from "firebase-admin";
+        // Compose the email
+        const mailOptions = {
+            from: "ajoud7101@gmail.com",
+            to: "alharbi55555b@gmail.com",
+            subject: `New Image Uploaded: ${fileName}`,
+            text: "A new image has been uploaded to the violation_images folder:\n\nFile URL: ${fileUrl}",
+        };
 
-// admin.initializeApp();
+        // Send the email
+        try {
+            await transporter.sendMail(mailOptions);
+            console.log("Email sent for file: ${fileName}");
+        } catch (error) {
+            console.error("Error sending email:", error);
+        }
 
-// exports.copyFileToViolationImages = functions.storage.object().onFinalize(async (object) => {
-//     const bucket = admin.storage().bucket();
-//     const filePath = object.name; // Original path of the file
-//     const fileName = filePath.split('/').pop(); // Name of the file
-//     const newFilePath = `violation_images/${fileName}`; // New path for the copied file
-
-//     // Check if the file is located in the original path (adjust the condition as needed)
-//     if (filePath.startsWith('gs://rasid-cam.appspot.com')) { // Specify your original path here
-//         try {
-//             await bucket.file(filePath).copy(bucket.file(newFilePath));
-//             console.log(`Copied: ${filePath} to ${newFilePath}`);
-//         } catch (error) {
-//             console.error(`Failed to copy: ${error}`);
-//         }
-//     } else {
-//         console.log(`File does not match condition: ${filePath}`);
-//     }
-// });
-
-// //  code run: firebase deploy --only functions
+        return null;
+    });

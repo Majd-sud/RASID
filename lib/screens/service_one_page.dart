@@ -42,24 +42,31 @@ class _ServiceToSeeViolationsPageState
   Future<void> _loadImagesFromFirebase() async {
     try {
       final firebaseStorage = FirebaseStorage.instance;
+
+      // List all items in the "violation_images" folder
       final ListResult result =
           await firebaseStorage.ref('violation_images').listAll();
 
       for (var ref in result.items) {
-        if (ref.name.endsWith('.jpg')) {
+        try {
+          // Fetch the image download URL
           final String imageUrl = await ref.getDownloadURL();
-          print('Image URL: $imageUrl'); // طباعة الرابط
-          final violationNumber =
-              _generateViolationNumber(imagePaths.length); // توليد رقم المخالفة
+          print('Image URL: $imageUrl'); // Debug: Log the URL
+
+          // Update state with the new image URL
           setState(() {
             imagePaths.add(imageUrl);
           });
-          // حفظ تفاصيل المخالفة
+
+          // Optionally save violation details in the Realtime Database
+          final violationNumber = _generateViolationNumber(imagePaths.length);
           await saveViolationDetails(violationNumber, imageUrl);
+        } catch (e) {
+          print('Error fetching image URL for ${ref.name}: $e');
         }
       }
     } catch (e) {
-      print('Error loading images: $e');
+      print('Error listing images from Firebase Storage: $e');
       _showErrorSnackBar('خطأ في تحميل الصور: $e');
     }
   }
@@ -164,7 +171,7 @@ class _ServiceToSeeViolationsPageState
       itemCount: imagePaths.length,
       itemBuilder: (context, index) {
         return ViolationImageCard(
-          imageUrl: imagePaths[index], // تمرير رابط الصورة
+          imageUrl: imagePaths[index], // Pass the image URL
           violationNumber: _generateViolationNumber(index),
         );
       },

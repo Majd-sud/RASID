@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:rasid/widgets/navbar_top.dart';
 import 'package:rasid/widgets/navbar_bottom.dart';
 
@@ -14,12 +15,40 @@ class ServiceToViewSentViolationsPage extends StatefulWidget {
 
 class _ServiceToViewSentViolationsPageState
     extends State<ServiceToViewSentViolationsPage> {
-  int? activeServiceIndex;
+  List<Map<String, dynamic>> sentViolationsList = [];
 
-  void _onServiceTap(int index) {
-    setState(() {
-      activeServiceIndex = index;
-    });
+  @override
+  void initState() {
+    super.initState();
+    fetchSentViolations();
+  }
+
+  Future<void> fetchSentViolations() async {
+    final databaseReference = FirebaseDatabase.instance.ref('SentViolation');
+
+    try {
+      final snapshot = await databaseReference.once();
+      final data = snapshot.snapshot.value;
+
+      if (data != null && data is Map) {
+        sentViolationsList.clear();
+        data.forEach((key, value) {
+          sentViolationsList.add({
+            'violationNumber': value['violationNumber'],
+            'phoneNumber': value['phoneNumber'],
+            'carNumber': value['carNumber'],
+            'violationDate': value['violationDate'],
+            'violationMessage': value['violationMessage'],
+            'violationDetails': value['violationDetails'],
+          });
+        });
+        setState(() {}); // تحديث الواجهة بعد جلب البيانات
+      } else {
+        print('No sent violations found.');
+      }
+    } catch (e) {
+      print('Error fetching sent violations: ${e.toString()}');
+    }
   }
 
   @override
@@ -28,12 +57,20 @@ class _ServiceToViewSentViolationsPageState
       backgroundColor: const Color.fromARGB(255, 255, 255, 255),
       body: Column(
         children: [
-          Expanded(child: const NavBarTop()),
-          _buildHeader(),
-          _buildDivider(),
-          _buildServiceCards(),
-          // const SizedBox(height: 200),
-          Expanded(child: const NavBarBottom()),
+          const NavBarTop(),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildHeader(),
+                  _buildDivider(),
+                  ...sentViolationsList
+                      .map((violation) => _buildViolationCard(violation)),
+                ],
+              ),
+            ),
+          ),
+          const NavBarBottom(),
         ],
       ),
     );
@@ -77,7 +114,7 @@ class _ServiceToViewSentViolationsPageState
   Widget _buildDivider() {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 2),
-      width: 1000,
+      width: double.infinity,
       child: const Column(
         children: [
           SizedBox(height: 5),
@@ -88,13 +125,59 @@ class _ServiceToViewSentViolationsPageState
     );
   }
 
-  Widget _buildServiceCards() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(30.0),
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [],
+  Widget _buildViolationCard(Map<String, dynamic> violation) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+      padding: const EdgeInsets.all(15.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12.0),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 2,
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            'رقم المخالفة: ${violation['violationNumber']}',
+            style: const TextStyle(
+              fontSize: 16.0,
+              fontWeight: FontWeight.bold,
+              color: Colors.black,
+            ),
+          ),
+          const SizedBox(height: 10.0),
+          Text(
+            'رقم الهاتف: ${violation['phoneNumber']}',
+            style: const TextStyle(fontSize: 14.0, color: Colors.black),
+          ),
+          const SizedBox(height: 5.0),
+          Text(
+            'رقم السيارة: ${violation['carNumber']}',
+            style: const TextStyle(fontSize: 14.0, color: Colors.black),
+          ),
+          const SizedBox(height: 5.0),
+          Text(
+            'تاريخ المخالفة: ${violation['violationDate']}',
+            style: const TextStyle(fontSize: 14.0, color: Colors.black),
+          ),
+          const SizedBox(height: 5.0),
+          Text(
+            'رسالة المخالفة: ${violation['violationMessage']}',
+            style: const TextStyle(fontSize: 14.0, color: Colors.black),
+          ),
+          const SizedBox(height: 5.0),
+          Text(
+            'تفاصيل المخالفة: ${violation['violationDetails']}',
+            style: const TextStyle(fontSize: 14.0, color: Colors.black),
+          ),
+        ],
       ),
     );
   }

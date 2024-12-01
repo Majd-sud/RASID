@@ -3,6 +3,9 @@ import 'package:rasid/widgets/navbar_top.dart';
 import 'package:rasid/widgets/navbar_bottom.dart';
 import 'package:firebase_database/firebase_database.dart';
 
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 class ServiceSendViolationsPage extends StatefulWidget {
   const ServiceSendViolationsPage({super.key});
 
@@ -21,6 +24,7 @@ class _ServiceSendViolationsPageState extends State<ServiceSendViolationsPage> {
   void initState() {
     super.initState();
     fetchViolationNumbers();
+    print("👉 2");
   }
 
   Future<void> fetchViolationNumbers() async {
@@ -147,7 +151,7 @@ class _ServiceSendViolationsPageState extends State<ServiceSendViolationsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Container(
+                          SizedBox(
                             height: h * .15,
                             width: w * .3,
                             child: Column(
@@ -161,7 +165,7 @@ class _ServiceSendViolationsPageState extends State<ServiceSendViolationsPage> {
                                   color: titleColor,
                                 ),
                                 const SizedBox(height: 5.0),
-                                Text(
+                                const Text(
                                   'لرفع المخالفة يجب عليك تعبئة حقول \nالبيانات المطلوبة',
                                   textAlign: TextAlign.right,
                                 )
@@ -171,7 +175,7 @@ class _ServiceSendViolationsPageState extends State<ServiceSendViolationsPage> {
                         ],
                       ),
                     ),
-                    Container(
+                    SizedBox(
                       height: h * .3,
                       width: w * .9,
                       child: Row(
@@ -203,8 +207,9 @@ class _ServiceSendViolationsPageState extends State<ServiceSendViolationsPage> {
                                       loadingBuilder: (BuildContext context,
                                           Widget child,
                                           ImageChunkEvent? loadingProgress) {
-                                        if (loadingProgress == null)
+                                        if (loadingProgress == null) {
                                           return child;
+                                        }
                                         return Center(
                                           child: CircularProgressIndicator(
                                             value: loadingProgress
@@ -301,7 +306,7 @@ class _ServiceSendViolationsPageState extends State<ServiceSendViolationsPage> {
   }
 
   Widget _buildViolationForm(int violationNumber) {
-    final _formKey = GlobalKey<FormState>();
+    final formKey = GlobalKey<FormState>();
     String? phoneNumber,
         carNumber,
         violationDate,
@@ -309,7 +314,7 @@ class _ServiceSendViolationsPageState extends State<ServiceSendViolationsPage> {
         violationDetails;
 
     return Form(
-      key: _formKey,
+      key: formKey,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
@@ -391,8 +396,66 @@ class _ServiceSendViolationsPageState extends State<ServiceSendViolationsPage> {
           ),
           const SizedBox(height: 10.0),
           ElevatedButton(
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
+            onPressed: () async {
+              if (formKey.currentState!.validate()) {
+                try {
+                  final url =
+                      Uri.parse('https://freeemailapi.vercel.app/sendEmail/');
+                  final response = await http.post(url,
+                      headers: {
+                        'Content-Type': 'application/json; charset=UTF-8'
+                      },
+                      body: jsonEncode({
+                        "toEmail": "alharbi55555b@gmail.com",
+                        "title": "RAASID",
+                        "subject": "$violationNumber",
+                        // "body": "تم رصد مخالفة الرجاء مطابقتها و رفعها",
+                        "body": "A ticket has been issued for you",
+                      }));
+
+                  if (response.statusCode == 200) {
+                    final responseData = jsonDecode(response.body);
+                    if (responseData['message'] == 'emailSendSuccess') {
+                      print('Email sent successfully: $responseData');
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content:
+                              const Text('تم إرسال البريد الإلكتروني بنجاح'),
+                          action: SnackBarAction(
+                              label: 'موافق',
+                              onPressed: () {
+                                // Perform some action if needed
+                              })));
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text('Fail: $responseData'),
+                          action: SnackBarAction(
+                              label: 'موافق',
+                              onPressed: () {
+                                // Perform some action if needed
+                              })));
+                      print('Email sending failed: $responseData');
+                    }
+                  } else {
+                    print('Request failed with status: ${response.statusCode}');
+                    print('Response body: ${response.body}');
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('Fail: ${response.body}'),
+                        action: SnackBarAction(
+                            label: 'موافق',
+                            onPressed: () {
+                              // Perform some action if needed
+                            })));
+                  }
+                } catch (e, st) {
+                  print("💥 error is $e, stack trace: $st");
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('Fail: $e'),
+                      action: SnackBarAction(
+                          label: 'موافق',
+                          onPressed: () {
+                            // Perform some action if needed
+                          })));
+                }
                 _sendViolation(
                   violationNumber,
                   phoneNumber,
@@ -435,13 +498,13 @@ class _ServiceSendViolationsPageState extends State<ServiceSendViolationsPage> {
         hintText: hintText,
         hintStyle: const TextStyle(
             color: Color.fromARGB(255, 145, 150, 148)), // لون النص في hintText
-        border: OutlineInputBorder(),
-        focusedBorder: OutlineInputBorder(
-          borderSide: const BorderSide(color: Color(0xFF1B8354)),
+        border: const OutlineInputBorder(),
+        focusedBorder: const OutlineInputBorder(
+          borderSide: BorderSide(color: Color(0xFF1B8354)),
         ),
-        enabledBorder: OutlineInputBorder(
+        enabledBorder: const OutlineInputBorder(
           borderSide:
-              const BorderSide(color: Color(0xFFD2D6DB)), // لون الحافة العادية
+              BorderSide(color: Color(0xFFD2D6DB)), // لون الحافة العادية
         ),
       ),
       validator: validator,

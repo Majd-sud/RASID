@@ -8,8 +8,8 @@ admin.initializeApp();
 const transporter = nodemailer.createTransport({
     service: "Gmail",
     auth: {
-        user: "ajoud7101@gmail.com",
-        pass: "0555598476",
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
     },
 });
 
@@ -26,20 +26,20 @@ exports.sendEmailOnImageUpload = functions.storage
 
         const fileName = filePath.split("/").pop(); // Get the file name
         const bucketName = object.bucket; // Storage bucket name
-        const fileUrl = "https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(filePath)}?alt=media";
+        const fileUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(filePath)}?alt=media`;
 
         // Compose the email
         const mailOptions = {
-            from: "ajoud7101@gmail.com",
+            from: process.env.EMAIL_USER,
             to: "alharbi55555b@gmail.com",
             subject: `New Image Uploaded: ${fileName}`,
-            text: "A new image has been uploaded to the violation_images folder:\n\nFile URL: ${fileUrl}",
+            text: `A new image has been uploaded to the violation_images folder:\n\nFile URL: ${fileUrl}`,
         };
 
         // Send the email
         try {
             await transporter.sendMail(mailOptions);
-            console.log("Email sent for file: ${fileName}");
+            console.log(`Email sent for file: ${fileName}`);
         } catch (error) {
             console.error("Error sending email:", error);
         }

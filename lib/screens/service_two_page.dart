@@ -406,11 +406,12 @@ class _ServiceSendViolationsPageState extends State<ServiceSendViolationsPage> {
                         'Content-Type': 'application/json; charset=UTF-8'
                       },
                       body: jsonEncode({
-                        "toEmail": "alharbi55555b@gmail.com",
+                        "toEmail": "majdalsahafi3@gmail.com",
                         "title": "RAASID",
                         "subject": "$violationNumber",
                         // "body": "تم رصد مخالفة الرجاء مطابقتها و رفعها",
-                        "body": "A ticket has been issued for you",
+                        "body":
+                            "Dear car owner number 7401, has been detected in a traffic safety violation."
                       }));
 
                   if (response.statusCode == 200) {

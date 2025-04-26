@@ -395,14 +395,20 @@ class _ServiceSendViolationsPageState extends State<ServiceSendViolationsPage> {
             },
           ),
           const SizedBox(height: 10.0),
+          // Define an ElevatedButton widget to trigger the email sending process when pressed
           ElevatedButton(
             onPressed: () async {
+              // Asynchronous function to handle button press
               if (formKey.currentState!.validate()) {
+                // Check if form data is valid before proceeding
                 try {
+                  // Parse the API endpoint URL
                   final url =
                       Uri.parse('https://freeemailapi.vercel.app/sendEmail/');
+                  // Send a POST request to the API with the required headers and body
                   final response = await http.post(url,
                       headers: {
+                        // Set the content type to JSON
                         'Content-Type': 'application/json; charset=UTF-8'
                       },
                       body: jsonEncode({
@@ -413,11 +419,15 @@ class _ServiceSendViolationsPageState extends State<ServiceSendViolationsPage> {
                         "body":
                             "Dear car owner number 7401, has been detected in a traffic safety violation."
                       }));
-
+                  // Check if the API call was successful (status code 200)
                   if (response.statusCode == 200) {
+                    // Decode the JSON response body
                     final responseData = jsonDecode(response.body);
+                    // Check if the email was sent successfully based on the API response
                     if (responseData['message'] == 'emailSendSuccess') {
-                      print('Email sent successfully: $responseData');
+                      print(
+                          'Email sent successfully: $responseData'); // Log success to the console
+                      // Show a success SnackBar to the user
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                           content:
                               const Text('تم إرسال البريد الإلكتروني بنجاح'),
@@ -427,8 +437,10 @@ class _ServiceSendViolationsPageState extends State<ServiceSendViolationsPage> {
                                 // Perform some action if needed
                               })));
                     } else {
+                      // Handle non-200 HTTP responses
                       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text('Fail: $responseData'),
+                          content:
+                              Text('Fail: $responseData'), // Log status code
                           action: SnackBarAction(
                               label: 'موافق',
                               onPressed: () {
@@ -448,7 +460,9 @@ class _ServiceSendViolationsPageState extends State<ServiceSendViolationsPage> {
                             })));
                   }
                 } catch (e, st) {
+                  // Catch any runtime exceptions
                   print("💥 error is $e, stack trace: $st");
+                  // Show an error SnackBar to the user
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                       content: Text('Fail: $e'),
                       action: SnackBarAction(
